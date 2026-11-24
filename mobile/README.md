@@ -1,5 +1,7 @@
 # IPv6 文件传输工具 · 手机版（Pydroid 3）
 
+> 项目总览、电脑版说明见 [../README.md](../README.md)。
+
 竖屏手机界面，四个页签完成全部操作：**连接 / 发送 / 接收 / 聊天**。
 与电脑版协议完全一致，手机可以和电脑、另一台手机互相传文件、发消息。
 
@@ -9,9 +11,10 @@
 |---|---|
 | `main.py` | 手机版主程序（入口） |
 | `file_core.py` | 协议与传输内核（必须和主程序放在同一目录） |
-| `diagnose.py` | 启动诊断脚本（闪退时运行，生成 `mobile_diag.txt`） |
 | `NETWORK_SETUP.md` | **连接前的网络配置说明（必读）**：IPv6 地址类型、Windows/手机/光猫设置、防火墙放行、公网直连与排查 |
 | `README.md` | 本说明 |
+
+> `mobile_config.json` 是运行后自动生成的配置文件（保存端口、目录、密码、别名等），不是必需文件；其中包含密码，注意保护。
 
 > 连接前请先阅读 [NETWORK_SETUP.md](NETWORK_SETUP.md)。最常见的连不上原因是：电脑 Wi-Fi 没启用 IPv6、填了 `::1`/虚拟网卡地址、Windows 防火墙没放行，或手机用了移动数据。
 
@@ -113,7 +116,13 @@ Pydroid 3 的 Tkinter 组件未安装。打开 Pydroid 菜单 → Pip → 搜索
 **打不开 / 一运行就闪退**
 1. 确认手机目录里的 `main.py` 和 `file_core.py` 是同一版本（两个都要更新），并删掉旧的 `__pycache__` 目录；
 2. 完全退出 Pydroid（从后台划掉），再重新打开运行；
-3. 仍然闪退：在 Pydroid 里运行 `diagnose.py`，它会生成 `mobile_diag.txt`，把内容发给开发者即可定位（会记录 Python 版本、Tk 创建、模块导入、界面初始化分别是否成功）。
+3. 仍然闪退：在 Pydroid 的终端里进入 `main.py` 所在目录执行：
+   ```bash
+   cd /storage/emulated/0/Documents/Ipv6Transfer/mobile
+   python main.py
+   ```
+   终端通常会打印 Python 的 traceback，可据此定位是缺少 Tkinter、文件缺失还是代码报错；
+4. 如果报 `No module named tkinter`，在 Pydroid 里安装 Tkinter 组件后重试。
 
 **连接失败**
 1. 确认服务器已点「启动监听」；
