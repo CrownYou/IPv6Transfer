@@ -1,0 +1,13 @@
+{
+  "role": "server",
+  "port": "9000",
+  "host": "2409:8a20:5a77:b970:240b:7ff:fe42:7569",
+  "zone": "",
+  "recv_dir": "received",
+  "client_recv_dir": "downloads",
+  "password": "9600",
+  "client_aliases": {
+    "2409:8a20:5a77:b970:9154:e1c:68ba:d922": "我的手机"
+  },
+  "geometry": "2065x1365+285+121"
+}
