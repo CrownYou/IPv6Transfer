@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
+             x:Class="Ipv6Transfer.Mobile.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <Color x:Key="PageBg">#F6F7F9</Color>
+            <Color x:Key="CardBg">#FFFFFF</Color>
+            <Color x:Key="BrandBlue">#1A73E8</Color>
+            <Color x:Key="TextMain">#202124</Color>
+            <Color x:Key="TextMuted">#5F6368</Color>
+            <Color x:Key="BorderGrey">#DADCE0</Color>
+            <Color x:Key="OkGreen">#188038</Color>
+            <Color x:Key="BadRed">#D93025</Color>
+            <Color x:Key="WarnAmber">#F29900</Color>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+
+            <Style TargetType="Entry">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+            </Style>
+
+            <Style TargetType="Editor">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+            </Style>
+
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardBg}" />
+                <Setter Property="Stroke" Value="{StaticResource BorderGrey}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Padding" Value="12" />
+                <Setter Property="StrokeShape">
+                    <Setter.Value>
+                        <shapes:RoundRectangle CornerRadius="12" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="InputBox" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                <Setter Property="Stroke" Value="{StaticResource BorderGrey}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Padding" Value="8,2" />
+                <Setter Property="StrokeShape">
+                    <Setter.Value>
+                        <shapes:RoundRectangle CornerRadius="8" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="TabButton" TargetType="Button">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="6,9" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="BackgroundColor" Value="#ECEEF1" />
+                <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+                <Style.Triggers>
+                    <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="SegmentButton" TargetType="Button">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="8,10" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BorderWidth" Value="1" />
+                <Setter Property="BorderColor" Value="{StaticResource BorderGrey}" />
+                <Setter Property="BackgroundColor" Value="#F4F5F7" />
+                <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+            </Style>
+
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="10,10" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                <Setter Property="TextColor" Value="#FFFFFF" />
+                <Style.Triggers>
+                    <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="SecondaryButton" TargetType="Button">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="10,10" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BorderWidth" Value="1" />
+                <Setter Property="BorderColor" Value="{StaticResource BrandBlue}" />
+                <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                <Setter Property="TextColor" Value="{StaticResource BrandBlue}" />
+                <Style.Triggers>
+                    <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.38" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="SectionTitle" TargetType="Label">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+            </Style>
+
+            <Style x:Key="MutedText" TargetType="Label">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+            </Style>
+
+            <Style x:Key="FieldLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="VerticalTextAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="TableHeader" TargetType="Label">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

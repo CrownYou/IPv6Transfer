@@ -1,138 +1,262 @@
-# IPv6 文件传输工具 · 手机版（Pydroid 3）
+# IPv6 文件传输 · 手机版（C# / .NET MAUI）
 
-> 项目总览、电脑版说明见 [../README.md](../README.md)。
+> 这是原手机版（Pydroid 3 / Tkinter，现已由本 C# 版取代）的 C# 重写：**界面一致、功能一致、协议完全兼容**。
+> 手机可以和电脑、另一台手机（Python 版或本 App）互相传文件、发消息。
 
-竖屏手机界面，四个页签完成全部操作：**连接 / 发送 / 接收 / 聊天**。
-与电脑版协议完全一致，手机可以和电脑、另一台手机互相传文件、发消息。
+| | |
+|---|---|
+| 框架 | .NET 10 + .NET MAUI |
+| 目标平台 | Android（主）、Windows（桌面调试）、iOS / MacCatalyst（同一套代码，需 Mac 构建） |
+| 应用 ID | `com.ipv6transfer.mobile` |
+| minSdk / targetSdk | 21 / 36 |
+| 协议版本 | `PROTO_VERSION = 1`，与 `../PC/file_core.py` 逐字节一致 |
 
-## 文件说明
+## 交付物
 
 | 文件 | 说明 |
 |---|---|
-| `main.py` | 手机版主程序（入口） |
-| `file_core.py` | 协议与传输内核（必须和主程序放在同一目录） |
-| `NETWORK_SETUP.md` | **连接前的网络配置说明（必读）**：IPv6 地址类型、Windows/手机/光猫设置、防火墙放行、公网直连与排查 |
-| `README.md` | 本说明 |
+| `dist/com.ipv6transfer.mobile-1.0.1.apk` | **可直接安装的 Release APK**（29 MB，`adb install` 即可） |
+| `docs/screenshots/` | 模拟器（Pixel 7 / API 36）实拍截图，共 12 张（含应用图标） |
+| `tests/run-interop.ps1` | 对着 python 版跑 25 项协议互通断言 |
+| `README.md` | 本文（构建、功能、差异、限制、验证） |
 
-> `mobile_config.json` 是运行后自动生成的配置文件（保存端口、目录、密码、别名等），不是必需文件；其中包含密码，注意保护。
+> 同级目录里的 `MauiApp1/` 是最初创建的空模板工程，与本项目无关，可以整个删掉；
+> 本项目通过 `Ipv6Transfer.slnx` 管理 `Ipv6Transfer.Core` 与 `Ipv6Transfer.Mobile` 两个工程。
 
-> 连接前请先阅读 [NETWORK_SETUP.md](NETWORK_SETUP.md)。最常见的连不上原因是：电脑 Wi-Fi 没启用 IPv6、填了 `::1`/虚拟网卡地址、Windows 防火墙没放行，或手机用了移动数据。
+![连接页](docs/screenshots/01-连接页.png)
 
-## 在 Pydroid 3 里运行
 
-1. 安装 **Pydroid 3**。首次使用 Tkinter 时，Pydroid 可能提示安装 Tkinter 组件，按提示安装（Pydroid 3 自带 Tkinter 支持）。
-2. 把整个 `mobile` 文件夹复制到手机存储，例如：
-   ```
-   /storage/emulated/0/Documents/Ipv6Transfer/mobile/
-   ```
-3. 打开 Pydroid 3 → 左侧文件列表找到 `main.py` → 点运行（▶）。
-4. 如果弹权限提示，允许 Pydroid 访问存储；否则无法读写接收目录。
+## 1. 项目结构
 
-> 同一台手机上再次使用：Pydroid 会记住最近文件，重新打开运行即可。
+```
+C#/
+├─ Ipv6Transfer.slnx                  解决方案（含 Core + Mobile）
+├─ Ipv6Transfer.Core/                 协议内核（net10.0 类库，零 UI 依赖，可被任何项目引用）
+│  └─ Protocol/
+│     ├─ ProtocolConstants.cs          常量、异常、错误分类
+│     ├─ FramedConnection.cs           JSON 控制行 + 裸字节帧收发（对应 Conn）
+│     ├─ JsonMsg.cs                    紧凑 JSON 编解码 + 安全取值
+│     ├─ Handshake.cs                  hello / HMAC-SHA256 挑战应答 / 建连 / 监听
+│     ├─ ConnectionConfigCodec.cs      FT6.xxx.checksum 连接串编解码
+│     ├─ FileTransfer.cs               send_file / recv_file / list_remote
+│     ├─ ServerSession.cs              handle_transfer_session、NameLocks
+│     ├─ ControlLink.cs                文字通道（say / notice / push / ping / bye）
+│     ├─ FileNames.cs                  安全文件名、唯一名、路径越界校验
+│     ├─ Formats.cs                    大小 / 速率 / 时长格式化
+│     ├─ ProgressState.cs              进度、EMA 速率、ETA、限速
+│     └─ Ipv6Addresses.cs              本机 IPv6 地址枚举与分类
+├─ Ipv6Transfer.Mobile/               MAUI App
+│  ├─ App.xaml(.cs)                   资源样式、窗口装配、生命周期保存配置
+│  ├─ MauiProgram.cs                  字体、Android 输入框去下划线
+│  ├─ Views/
+│  │  ├─ MainPage.xaml(.cs)           四个页签主界面
+│  │  └─ Dialogs.cs                   文件浏览器 / 输入框 / 详情 / 哈希 / 分享 / 导入
+│  ├─ ViewModels/
+│  │  ├─ MainViewModel.cs             全部界面状态与业务（对应 python MobileApp）
+│  │  └─ ObservableObject.cs          INotifyPropertyChanged + 同步/异步命令
+│  ├─ Models/Models.cs                传输记录、待发送文件、在线客户端、聊天、地址条目
+│  ├─ Services/
+│  │  ├─ AppConfig.cs                 mobile_config.json（键名与 python 完全一致）
+│  │  ├─ DialogService.cs             模态页面 / 剪贴板
+│  │  └─ MobileStorage.cs             跨平台可写目录 + Android 公共存储授权
+│  └─ Platforms/Android/              清单权限（All files access 等）
+├─ tests/                             与 python 版的互通验证（见第 6 节）
+└─ docs/screenshots/                  模拟器实拍截图
+```
 
-## 使用步骤
+### Python → C# 对照
 
-### 作为服务器（手机等别人来连）
+| python | C# |
+|---|---|
+| `file_core.py` `Conn` | `Protocol/FramedConnection.cs` |
+| `read_hello` / `authenticate` / `resolve_and_connect` | `Protocol/Handshake.cs` |
+| `encode_connection_config` / `decode_connection_config` | `Protocol/ConnectionConfigCodec.cs` |
+| `send_file` / `recv_file` / `list_remote` | `Protocol/FileTransfer.cs` |
+| `handle_transfer_session` / `NameLocks` | `Protocol/ServerSession.cs` |
+| `ControlLink` | `Protocol/ControlLink.cs` |
+| `sanitize_name` / `unique_final_name` / `ensure_inside` | `Protocol/FileNames.cs` |
+| `human_bytes` / `format_duration` | `Protocol/Formats.cs` |
+| `ProgressState` / `RateLimiter` | `Protocol/ProgressState.cs` |
+| `list_ipv6_addresses` / `format_address_entry` | `Protocol/Ipv6Addresses.cs` |
+| `main.py` `MobileApp` | `ViewModels/MainViewModel.cs` + `Views/MainPage.xaml` |
+| `FileBrowser`（Tk Toplevel） | `Views/Dialogs.cs` `FileBrowserPage` |
+| 别名 / 哈希 / 详情 / 配置串弹窗 | `Views/Dialogs.cs` 各 Page |
+| `mobile_config.json` | `Services/AppConfig.cs`（同名键，两边文件可互换） |
 
-1. 「连接」页选 **服务器**，填端口（默认 9000）。
-2. 设置「连接密码」（可留空表示不验证；建议设置）。
-3. 「接收目录」默认在 `Download/IPv6Transfer/received`，可点「浏览」换目录。
-4. 点「启动监听」。
-5. 点地址栏右侧「分享配置」，复制生成的连接串发给客户端（其中包含地址、端口和密码）。
-6. 在线客户端列表里选中一个客户端，点「设置选中客户端别名」（或双击该行），可以给它起名（如"我的手机""小明电脑"）。别名按客户端 IP 记住，列表、聊天和发送目标都会显示别名。
+---
 
-### 作为客户端（手机连电脑/另一台手机）
+## 2. 构建与安装
 
-1. 「连接」页选 **客户端**。
-2. 点地址栏右侧「导入配置」：
-   - 剪贴板里已有连接串时，会自动识别并填入；
-   - 如果手机读不到剪贴板，弹窗里可以长按输入框手动粘贴，或点「从文件导入」；
-   - 也可以让服务器先把连接串发到「聊天」里，再点「导入配置」，程序会从聊天记录里找。
-3. 地址、端口、连接密码会自动填好；点「连接」。
-4. 也可以不用配置串，手动填地址/端口/密码。
+### 2.1 环境
 
-### 发送文件
+- .NET SDK 10（含 `android` / `maui-windows` workload）
+- Android SDK（platforms 35/36、build-tools 36）
+- JDK 21
 
-1. 「发送」页 →「添加文件」→ 用内置文件浏览器选择文件（可多次添加）。
-2. 「待发送文件」里可移除/清空。
-3. 点「开始上传」（客户端）或「开始发送」（服务器）。
-   - 服务器模式：在线客户端列表里**不选 = 发给全部**，选中 = 只发给选中的客户端。
-   - 传输记录的「对端」列会显示文件传给了谁/谁传给你：服务器端显示客户端别名或 IP，客户端显示"服务器"。
+```powershell
+$env:JAVA_HOME='C:\Program Files\Android\openjdk\jdk-21.0.8'
+$env:ANDROID_HOME='C:\Program Files (x86)\Android\android-sdk'
+$env:ANDROID_SDK_ROOT=$env:ANDROID_HOME
+```
 
-### 接收文件
+### 2.2 构建 Android APK
 
-- 对方发来的文件会自动下载到「接收目录」，列表每 3 秒自动刷新。
-- 「复制路径」可复制当前接收目录，粘贴到系统文件管理器里查看。
-- **点一下表格里的记录/文件**，会弹出详情窗口，显示完整文件名、大小、时间、本地路径，可一键复制文件名或路径。
-- 文件名很长时表格会变宽：用表头的「左移 / 右移」按钮，或表格底部的横向滚动条查看后面的列。
-- 在线客户端、本机 IPv6 地址这两个列表内容较长时，可以左右拖动它们下方的横向滚动条查看完整内容。
+```powershell
+cd D:\MyProjects\IPv6Transfer\mobile\C#
+dotnet build Ipv6Transfer.Mobile\Ipv6Transfer.Mobile.csproj -f net10.0-android -c Debug
+# 产物：Ipv6Transfer.Mobile\bin\Debug\net10.0-android\com.ipv6transfer.mobile-Signed.apk
+```
 
-### 聊天
+> **注意**：Debug 默认使用 Fast Deployment，直接 `adb install` 会闪退（`No assemblies found ... Fast Deployment`）。
+> 用 `adb install` 安装时请加参数把程序集嵌进 APK：
+>
+> ```powershell
+> dotnet build Ipv6Transfer.Mobile\Ipv6Transfer.Mobile.csproj -f net10.0-android -c Debug `
+>   -p:EmbedAssembliesIntoApk=true -p:AndroidEnableFastDeployment=false
+> adb install -r --no-incremental Ipv6Transfer.Mobile\bin\Debug\net10.0-android\com.ipv6transfer.mobile-Signed.apk
+> ```
+>
+> 正式分发请用 `-c Release`（默认已嵌入程序集，并做裁剪/AOT）。
 
-- 「聊天」页输入文字点「发送」。
-- 服务器不选在线客户端 = 群发；选中 = 只发该客户端。
-- 服务器收完文件会自动发一条系统通知（客户端聊天里显示为灰色「系统：…」）。
+### 2.3 桌面调试（Windows）
 
-## 连接密码与配置串
+```powershell
+dotnet build Ipv6Transfer.Mobile\Ipv6Transfer.Mobile.csproj -f net10.0-windows10.0.19041.0 -c Debug
+```
 
-- **服务器**：在「连接 → 服务器」里设置连接密码（留空 = 不验证）；启动监听后点地址栏的「分享配置」，会生成一段 `FT6.` 开头的连接串。
-- **客户端**：点「导入配置」，粘贴这段连接串（或先复制、再直接点按钮自动读取剪贴板），程序会自动填好 **IPv6 地址、端口、连接密码**，然后点「连接」。
-- 配置串 = 地址 + 端口 + 密码，**等同于密码**，请私发给对方，不要发公开群聊；它只是 Base64 编码，不是加密。
-- 密码不会在网络中以明文发送：客户端和服务器通过 HMAC-SHA256 挑战-响应校验。
-- 服务器改了密码或端口后，旧配置串会失效，需要重新「分享配置」。
-- 命令行也支持密码：`file_server.py --password 你的密码`、`file_client.py --password 你的密码 ...`。
+### 2.4 安装后第一次使用
 
-## 与电脑版互通
+1. 首次启动若出现「未获得公共存储权限」提示条，点「授权」→ 打开系统「所有文件访问权限」→ 返回 App。
+   （未授权也能用，文件会落到应用私有目录，卸载即丢失。）
+2. 服务器模式：填端口 → 启动监听 → 回到「连接」页点「分享配置」把连接串发给客户端。
+3. 客户端模式：填地址/端口/密码，或点「导入配置」粘贴/选文件导入。
 
-- 手机可以连电脑的 `file_server.py` / 电脑版 GUI（GUI 服务器支持文字、推送和连接密码）；
-- 电脑也可以连手机的服务器，上传/下载都走同一协议；
-- 服务器把文件推送给手机后，手机会自动接收并校验 SHA-256。
+---
 
-## 外网访问（不在同一 Wi-Fi）
+## 3. 功能清单（与 python 版逐项一致）
 
-手机用蜂窝数据、或在外网访问家里电脑时，有两种方式，详见 [NETWORK_SETUP.md](NETWORK_SETUP.md)：
+**连接**
+- 服务器 / 客户端双角色，切换角色会先停监听、断连接
+- 端口、接口索引（链路本地地址用）、连接密码（留空=不验证）
+- 服务器：接收目录 + 浏览、启动/停止监听、在线客户端列表、设置客户端别名（按 IP 记忆，双击/按钮进入）
+- 客户端：服务器地址、接收目录 + 浏览、连接 / 断开
+- 本机 IPv6 地址枚举（全局 / ULA / 链路本地，含接口索引、弃用/临时标记）＋复制选中 / 刷新地址
+- 「分享配置」生成 `FT6.` 连接串（含地址、端口、密码）；「导入配置」依次从剪贴板、聊天记录、文件自动识别
+- 存储权限提示条（Android 11+ 公共 Download 目录）
 
-- **Tailscale（推荐）**：电脑和手机都装 Tailscale、登录同一账号；手机客户端填电脑的 Tailscale IPv6（`fd7a:115c:a1e0:...`），不需要公网 IPv6，也不用改光猫端口。步骤见文档第 12 节。
-- **公网直连**：需要让光猫放行 IPv6 入站 TCP 9000，并放行 Windows 防火墙；家宽前缀可能变化，安全风险更高。步骤见文档第 11 节。
+**发送**
+- 添加文件（内置文件浏览器，可多次添加、去重）、待发送列表、移除选中 / 清空
+- 开始上传（客户端）/ 开始发送（服务器，推送给选中客户端或全部）
+- 当前任务：进度条、百分比、已传/总量、速率、剩余时间
+- 传输记录：文件 / 对端 / 方向 / 状态 / 校验，颜色区分；点行看详情、哈希详情；失败与取消可续传
 
-## 注意事项
+**接收**
+- 接收目录、复制路径、手动刷新、每 3 秒自动刷新
+- 文件列表（名称 / 大小 / 修改时间），点一下看完整名称与路径
 
-- **需要 IPv6 网络**：手机和对方要在同一 IPv6 可达的网络里（例如开启 IPv6 的 Wi-Fi）。手机热点、部分校园网可能只有 IPv4，此时无法使用。
-- 若「本机 IPv6 地址」里只有 `fe80::…%数字`，这类地址只能同网段使用，客户端需在「接口索引」填 `%` 后面的数字。
-- Android 11+ 的存储权限较严格；如果默认目录无法写入，用「浏览」选择 Pydroid 可写的目录（如
-  `/storage/emulated/0/Android/data/ru.iiec.pydroid3/files/` 下）。
-- 手机上无法像电脑一样"打开文件夹"，因此提供「复制路径」，请用系统文件管理器打开。
-- 传输时请保持 Pydroid 在前台，避免系统杀后台导致中断；中断后重新发送可从 `.part` 续传。
-- 中文显示为方块时：在「连接」页底部「界面字体」里换一个字体（如 Noto Sans CJK / Droid Sans Fallback）。若列表里没有中文字体，说明该 Tk 环境未带中文字体。
-- 若「本机 IPv6 地址」为空：先确认手机 Wi-Fi 真的有 IPv6（系统 WLAN 详情里能看到）。程序会自动尝试多种读取方式（系统接口、路由探测等）；如果仍然为空，点「分享配置」时会让你手动输入系统 WLAN 详情里的 IPv6 地址。
-- 若「导入配置」读不到剪贴板：弹窗里可以长按输入框手动粘贴、点「从文件导入」，或让服务器把连接串发到聊天里，再点一次「导入配置」（会从聊天记录里找）。
-- 连接密码只验证身份，**传输内容仍是明文**；公网使用建议再加 VPN/加密，或只用 Tailscale/ZeroTier 组网。
+**聊天**
+- 服务器：不选客户端=群发，选中=定向；客户端：与服务器单聊
+- 系统通知：服务器收完文件自动通知该客户端；客户端推送接收完成也会回执
+- 未读角标（页签名变「聊天 ●」）；系统消息 / 我方 / 对方分色
 
-## 常见问题
+**协议行为**
+- 流式 1 MiB 分块、`.part` 断点续传、SHA-256 双向校验、校验不一致自动重传一次
+- 重名不覆盖（`name_时间戳.ext`）、文件名净化、目录越界防护
+- 连接密码用 HMAC-SHA256 挑战应答，不在网络上传输明文密码
+- 心跳 ping 30s、`bye` 正常关闭
 
-**打不开 / 报 `No module named tkinter`**
-Pydroid 3 的 Tkinter 组件未安装。打开 Pydroid 菜单 → Pip → 搜索并安装 Tkinter（或按首启提示安装）。
+---
 
-**打不开 / 一运行就闪退**
-1. 确认手机目录里的 `main.py` 和 `file_core.py` 是同一版本（两个都要更新），并删掉旧的 `__pycache__` 目录；
-2. 完全退出 Pydroid（从后台划掉），再重新打开运行；
-3. 仍然闪退：在 Pydroid 的终端里进入 `main.py` 所在目录执行：
-   ```bash
-   cd /storage/emulated/0/Documents/Ipv6Transfer/mobile
-   python main.py
-   ```
-   终端通常会打印 Python 的 traceback，可据此定位是缺少 Tkinter、文件缺失还是代码报错；
-4. 如果报 `No module named tkinter`，在 Pydroid 里安装 Tkinter 组件后重试。
+## 4. 与 python 版的有意差异
 
-**连接失败**
-1. 确认服务器已点「启动监听」；
-2. 确认地址/端口正确，IPv6 可达（可先用浏览器访问 `[地址]` 测试网络）；
-3. 确认链路本地地址填了接口索引；
-4. 电脑防火墙需放行对应端口；
-5. 提示「连接密码错误」时，检查客户端密码或重新导入服务器分享的配置串。
+| 项目 | python 版 | C# 版 | 原因 |
+|---|---|---|---|
+| 界面字体选择器 | 有（`Noto Sans CJK` 等） | 移除 | Tk 在 Pydroid 上常缺中文字体才需要手动切换；MAUI 直接用系统字体，中文正常 |
+| 表格「左移 / 右移」 | 有 | 移除 | Tk Treeview 不会换行；MAUI 表格按屏宽自适应、名称省略，点行看完整信息 |
+| 文件选择 | 自研 Tk 文件浏览器 | 自研文件浏览器（同功能：路径输入、手机存储/下载/主目录/上一级、进入目录） | 保持一致，不依赖系统 SAF |
+| 存储权限 | Pydroid 由系统授予 | 申请 `MANAGE_EXTERNAL_STORAGE` 并给出提示条 | Android 11+ 分区存储 |
+| 后台/退出保存 | 关闭窗口时保存 | 关闭窗口 + 退到后台都保存 | Android 常被系统回收 |
+| 角色选择 | 两个单选圆钮 | 两段式按钮（选中蓝色填充） | 系统深色模式下 RadioButton 会带黑底，分段按钮配色可控、点击区域更大 |
+| 主题 | Tk 固定浅色 | 固定浅色（不跟随系统深色） | 界面配色按浅色设计，跟随深色会出现白字白底、黑底黑字 |
+| 布局 | Tk grid 紧凑堆叠 | 卡片式分组（信息与操作一一对应） | 触屏点击区域更大 |
 
-**收发速度慢**
-手机 Wi-Fi 省电模式、后台限制会影响速度；传输时保持屏幕常亮、Pydroid 在前台。
+---
 
-**文件在哪**
-接收目录在「接收」页顶部显示，点「复制路径」后到文件管理器粘贴打开。
+## 5. 已知限制
+
+- **仅 IPv6**：与 python 版一致，客户端只接受 IPv6 字面量（`2409:…`、`fe80::…%12`）。链路本地地址需填「接口索引」。
+- **明文传输**：连接密码只做身份认证，内容不加密；公网使用建议叠加 VPN / Tailscale。
+- **Android 10（API 29）**：`MANAGE_EXTERNAL_STORAGE` 不存在、`WRITE_EXTERNAL_STORAGE` 对 targetSdk≥29 失效，公共 Download 不可写时会自动回退到应用私有目录。
+- **Google Play**：使用「所有文件访问权限」需单独申报；不符合时去掉该权限、只用应用私有目录即可。
+- 传输时请保持 App 在前台（与 python 版要求相同），中断后重发会从 `.part` 续传。
+- iOS / MacCatalyst 目标代码已编写但未在 Windows 上构建验证（需 Mac + Xcode）。
+
+---
+
+## 6. 验证
+
+### 6.1 协议互通（对着 python 版跑）
+
+```powershell
+cd D:\MyProjects\IPv6Transfer\mobile\C#\tests
+pwsh -File .\run-interop.ps1
+```
+
+该脚本用 `interop_peer.py` 直接调用 `../PC/file_core.py` 当对端，覆盖 25 项断言：
+
+| # | 场景 | 结果 |
+|---|---|---|
+| 1 | 连接串：python→C#、C#→python、两端逐字节一致 | PASS |
+| 2 | C# 上传 → python 服务器，文件哈希一致 | PASS |
+| 3 | C# 从 python 服务器下载，哈希一致 | PASS |
+| 4 | python 上传 → C# 服务器，哈希一致 | PASS |
+| 5 | python 从 C# 服务器下载，哈希一致 | PASS |
+| 6 | 半截 `.part` 续传（`resume_from=500000`），最终哈希一致 | PASS |
+| 7 | 密码认证：正确密码通过、错误密码被拒（双向） | PASS |
+| 8 | 文字通道：聊天、系统通知、推送消息（双向） | PASS |
+| 9 | 服务器推送 + `token` 下载（双向） | PASS |
+
+### 6.2 Android 真机级验证（Pixel 7 / API 36 模拟器，实拍截图见 `docs/screenshots`）
+
+- 应用安装启动、四页签切换、中文渲染：✅
+- 本机 IPv6 地址枚举（`fec0::` / `fe80::…%15` / `fe80::…%2`）：✅
+- 服务器模式：启动监听、端口 9010、公共 Download 目录写入、接收上传（SHA-256 一致）：✅
+- 服务器密码认证（HMAC）：错误密码被拒 / 正确密码通过：✅
+- 服务器对外提供下载（含 `list`/`get`）：✅
+- 服务器收到文件后向在线客户端发系统通知：✅
+- 客户端模式：连接、聊天收发、通知显示、服务器推送后自动用 token 下载并校验：✅
+- 客户端上传（内置文件浏览器选文件 → 待发送 → 上传）：✅
+- 客户端别名设置 + 传输记录「对端」显示别名：✅
+- 配置文件：读取 python 格式 `mobile_config.json`、退到后台自动保存（含别名）：✅
+- 弹窗：文件浏览器、记录详情、哈希详情、分享配置、导入配置（从文件导入）：✅
+
+---
+
+## 7. 测试工具说明（`tests/`）
+
+| 文件 | 作用 |
+|---|---|
+| `interop_peer.py` | 用 python 版 `file_core` 充当对端：server/send/recv/control/push 各模式 |
+| `Ipv6Transfer.Interop/` | C# 侧对端工具：`selftest`、`server`、`send`、`recv`、`control-serve`、`push-serve`、`dual`、`hold4`、`send4`、`recv4`（4 结尾=走 IPv4，便于配合 `adb reverse/forward` 在模拟器上验证） |
+| `run-interop.ps1` | 一键跑完上表 25 项，输出 PASS/FAIL 与日志目录 |
+
+> 单独调试时也可以 `dotnet run --project tests/Ipv6Transfer.Interop -- selftest $env:TEMP\ipv6selftest`，
+> 它在单进程内跑「上传 → 回传 → 续传 → 聊天」的全链路自测。
+
+## 8. 应用图标与主题
+
+**图标**来自 `app_icon_256.ico`（`docs/icon-source.png` 是它的 PNG 版），已做成 Android 自适应图标：
+
+| 资源 | 说明 |
+|---|---|
+| `Resources/AppIcon/appicon.png` | 背景层，纯深蓝 `#163882` |
+| `Resources/AppIcon/appicon_fg.png` | 前景层，原始图标缩到 72% 画布（安全区），保证启动器圆形/方形遮罩不会切掉两侧箭头 |
+| `Resources/Splash/splash.png` | 启动图（白底 + 图标） |
+
+`MauiIcon` 会生成 `mipmap-anydpi-v26/appicon.xml`（adaptive，含 monochrome 层）、各密度
+`mipmap-*/appicon.png` / `appicon_round.png`，以及 Windows / iOS 用的合成图标。
+截图见 `docs/screenshots/12-应用图标.png`。
+
+**主题**：启动时固定 `UserAppTheme = Light`（见 `App.xaml.cs`）。原因是界面配色按浅色设计，
+若跟随系统深色主题，原生控件（旧版单选钮、未设样式时的列表文字）会出现黑底白字/白字白底；
+固定浅色后，深色模式手机上界面也始终清晰一致。

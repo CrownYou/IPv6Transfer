@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Ipv6Transfer.Core/Ipv6Transfer.Core.csproj" />
+  <Project Path="Ipv6Transfer.Mobile/Ipv6Transfer.Mobile.csproj" />
+</Solution>

@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Ipv6Transfer.Mobile.ViewModels"
+             xmlns:models="clr-namespace:Ipv6Transfer.Mobile.Models"
+             x:Class="Ipv6Transfer.Mobile.Views.MainPage"
+             x:DataType="vm:MainViewModel"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="{StaticResource PageBg}"
+             Title="IPv6 文件传输">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- ================= 顶部状态 ================= -->
+        <Grid Grid.Row="0" Padding="14,10,14,4"
+              RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+            <Label Grid.Row="0" Grid.Column="0" Text="IPv6 文件传输"
+                   FontSize="19" FontAttributes="Bold" TextColor="{StaticResource TextMain}" />
+            <Label Grid.Row="0" Grid.Column="1" Text="●" FontSize="14"
+                   TextColor="{Binding StatusColor}" VerticalOptions="Center" />
+            <Label Grid.Row="1" Grid.Column="0" Text="{Binding StatusText}"
+                   FontSize="13" TextColor="{StaticResource TextMuted}" />
+            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PeerText}"
+                   FontSize="11" TextColor="{StaticResource TextMuted}"
+                   LineBreakMode="TailTruncation" MaximumWidthRequest="170"
+                   HorizontalTextAlignment="End" />
+        </Grid>
+
+        <!-- ================= 页签 ================= -->
+        <Grid Grid.Row="1" Padding="10,0,10,8" ColumnSpacing="5"
+              ColumnDefinitions="*,*,*,*">
+            <Button Grid.Column="0" Text="连接" Style="{StaticResource TabButton}"
+                    Command="{Binding SelectTabCommand}" CommandParameter="conn">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsConnectTab}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                        <Setter Property="TextColor" Value="#FFFFFF" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Grid.Column="1" Text="发送" Style="{StaticResource TabButton}"
+                    Command="{Binding SelectTabCommand}" CommandParameter="send">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsSendTab}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                        <Setter Property="TextColor" Value="#FFFFFF" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Grid.Column="2" Text="接收" Style="{StaticResource TabButton}"
+                    Command="{Binding SelectTabCommand}" CommandParameter="recv">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsReceiveTab}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                        <Setter Property="TextColor" Value="#FFFFFF" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Grid.Column="3" Text="{Binding ChatTitle}" Style="{StaticResource TabButton}"
+                    Command="{Binding SelectTabCommand}" CommandParameter="chat">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsChatTab}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                        <Setter Property="TextColor" Value="#FFFFFF" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </Grid>
+
+        <!-- ================= 连接页 ================= -->
+        <ScrollView Grid.Row="2" IsVisible="{Binding IsConnectTab}">
+            <VerticalStackLayout Padding="10,0,10,14" Spacing="10">
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="角色" Style="{StaticResource SectionTitle}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="服务器" Style="{StaticResource SegmentButton}"
+                                    Command="{Binding SelectRoleCommand}" CommandParameter="server">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsServerRole}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                        <Setter Property="BorderColor" Value="{StaticResource BrandBlue}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Grid.Column="1" Text="客户端" Style="{StaticResource SegmentButton}"
+                                    Command="{Binding SelectRoleCommand}" CommandParameter="client">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsClientRole}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandBlue}" />
+                                        <Setter Property="TextColor" Value="#FFFFFF" />
+                                        <Setter Property="BorderColor" Value="{StaticResource BrandBlue}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </Grid>
+                        <Grid ColumnDefinitions="54,*" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="端口" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding Port}" Keyboard="Numeric" MaxLength="5"
+                                       Placeholder="9000" />
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 服务器设置 -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding IsServerPanelVisible}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="服务器" Style="{StaticResource SectionTitle}" />
+
+                        <Grid ColumnDefinitions="64,*,Auto" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="接收目录" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding ServerReceiveDir}" />
+                            </Border>
+                            <Button Grid.Column="2" Text="浏览" Style="{StaticResource SecondaryButton}"
+                                    Padding="10,8" Command="{Binding BrowseServerDirCommand}" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="64,*,Auto" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="连接密码" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding Password}" IsPassword="True" />
+                            </Border>
+                            <Label Grid.Column="2" Text="留空=不验证" Style="{StaticResource MutedText}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="启动监听" Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding StartServerCommand}" IsEnabled="{Binding CanStartServer}" />
+                            <Button Grid.Column="1" Text="停止监听" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding StopServerCommand}" IsEnabled="{Binding CanStopServer}" />
+                        </Grid>
+
+                        <Label Text="在线客户端（不选=全部）" Style="{StaticResource MutedText}" />
+                        <Border Style="{StaticResource InputBox}" Padding="4">
+                            <CollectionView ItemsSource="{Binding Peers}"
+                                            SelectedItem="{Binding SelectedPeer, Mode=TwoWay}"
+                                            SelectionMode="Single" HeightRequest="92">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:PeerEntry">
+                                        <Label Text="{Binding Label}" FontSize="13" Padding="6,7"
+                                               LineBreakMode="TailTruncation" />
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </Border>
+                        <Button Text="设置选中客户端别名" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding SetAliasCommand}" IsEnabled="{Binding CanSetAlias}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 客户端设置 -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding IsClientPanelVisible}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="客户端" Style="{StaticResource SectionTitle}" />
+
+                        <Grid ColumnDefinitions="70,*" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="服务器地址" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding Host}" Placeholder="2409:xxxx::1" />
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="70,110,*" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="接口索引" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding Zone}" Keyboard="Numeric" Placeholder="可留空" />
+                            </Border>
+                            <Label Grid.Column="2" Text="链路本地地址需要填" Style="{StaticResource MutedText}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="70,*" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="连接密码" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding Password}" IsPassword="True" />
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="70,*,Auto" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="接收目录" Style="{StaticResource FieldLabel}" />
+                            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                                <Entry Text="{Binding ClientReceiveDir}" />
+                            </Border>
+                            <Button Grid.Column="2" Text="浏览" Style="{StaticResource SecondaryButton}"
+                                    Padding="10,8" Command="{Binding BrowseClientDirCommand}" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="连接" Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding ConnectCommand}" IsEnabled="{Binding CanConnect}" />
+                            <Button Grid.Column="1" Text="断开" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding DisconnectCommand}" IsEnabled="{Binding CanDisconnect}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 本机地址 -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="本机 IPv6 地址" Style="{StaticResource SectionTitle}" />
+                        <Border Style="{StaticResource InputBox}" Padding="4">
+                            <CollectionView ItemsSource="{Binding Addresses}"
+                                            SelectedItem="{Binding SelectedAddress, Mode=TwoWay}"
+                                            SelectionMode="Single" HeightRequest="96">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:AddressItem">
+                                        <Label Text="{Binding Display}" FontSize="12" Padding="6,7"
+                                               LineBreakMode="TailTruncation" />
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </Border>
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                            <Button Grid.Column="0" Text="复制选中" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding CopyAddressCommand}" IsEnabled="{Binding CanCopyAddress}" />
+                            <Button Grid.Column="1" Text="刷新地址" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding RefreshAddressCommand}" />
+                            <Button Grid.Column="2" Text="{Binding ConfigButtonText}" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ConfigCommand}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 存储权限提示 -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding ShowStorageWarning}"
+                        BackgroundColor="#FFF7E6" Stroke="#F2C879">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0" Text="{Binding StorageWarningText}" FontSize="12"
+                               TextColor="#7A4F01" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="授权" Style="{StaticResource PrimaryButton}"
+                                Padding="10,8" Command="{Binding RequestStorageCommand}" />
+                    </Grid>
+                </Border>
+
+                <Label Style="{StaticResource MutedText}" LineBreakMode="WordWrap"
+                       Text="连接前请确认手机 Wi-Fi 已开启 IPv6；链路本地地址（fe80::）需要在「接口索引」填 % 后面的数字。" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ================= 发送页 ================= -->
+        <Grid Grid.Row="2" IsVisible="{Binding IsSendTab}" Padding="10,0,10,10"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="6">
+
+            <Grid Grid.Row="0" ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                <Button Grid.Column="0" Text="添加文件" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding AddFilesCommand}" />
+                <Button Grid.Column="1" Text="{Binding SendButtonText}" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding StartSendCommand}" IsEnabled="{Binding CanSend}" />
+                <Button Grid.Column="2" Text="取消" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding CancelCommand}" IsEnabled="{Binding CanCancel}" />
+            </Grid>
+
+            <Label Grid.Row="1" Text="{Binding PendingSummary}" Style="{StaticResource MutedText}" />
+
+            <Border Grid.Row="2" Style="{StaticResource InputBox}" Padding="4">
+                <CollectionView ItemsSource="{Binding PendingFiles}"
+                                SelectedItem="{Binding SelectedPending, Mode=TwoWay}"
+                                SelectionMode="Single" HeightRequest="88">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:PendingFile">
+                            <Label Text="{Binding Display}" FontSize="13" Padding="6,7"
+                                   LineBreakMode="TailTruncation" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="6">
+                <Button Grid.Column="0" Text="移除选中" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding RemovePendingCommand}" />
+                <Button Grid.Column="1" Text="清空" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding ClearPendingCommand}" />
+            </Grid>
+
+            <Border Grid.Row="4" Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="当前任务" Style="{StaticResource SectionTitle}" />
+                    <Label Text="{Binding TaskText}" FontSize="14" FontAttributes="Bold" />
+                    <ProgressBar Progress="{Binding Progress}" ProgressColor="{StaticResource BrandBlue}" />
+                    <Label Text="{Binding StatsText}" FontSize="11" TextColor="{StaticResource TextMuted}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <Label Grid.Column="0" Text="传输记录" Style="{StaticResource SectionTitle}"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="详情" Style="{StaticResource SecondaryButton}"
+                        Padding="12,6" FontSize="12" Command="{Binding ShowRowDetailCommand}" />
+            </Grid>
+
+            <Border Grid.Row="6" Style="{StaticResource InputBox}" Padding="4">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,72,54,60,52" Padding="4,4" ColumnSpacing="4">
+                        <Label Grid.Column="0" Text="文件" Style="{StaticResource TableHeader}" />
+                        <Label Grid.Column="1" Text="对端" Style="{StaticResource TableHeader}" />
+                        <Label Grid.Column="2" Text="方向" Style="{StaticResource TableHeader}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Grid.Column="3" Text="状态" Style="{StaticResource TableHeader}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Grid.Column="4" Text="校验" Style="{StaticResource TableHeader}"
+                               HorizontalTextAlignment="Center" />
+                    </Grid>
+                    <CollectionView Grid.Row="1" x:Name="HistoryList" ItemsSource="{Binding History}"
+                                    SelectionMode="Single"
+                                    SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                                    SelectionChanged="OnHistorySelectionChanged">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:TransferRow">
+                                <Grid ColumnDefinitions="*,72,54,60,52" Padding="4,7" ColumnSpacing="4">
+                                    <Label Grid.Column="0" Text="{Binding Name}" FontSize="12"
+                                           LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Remote}" FontSize="11"
+                                           LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Direction}" FontSize="11"
+                                           HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding Status}" FontSize="11"
+                                           TextColor="{Binding StatusColor}"
+                                           HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                                    <Label Grid.Column="4" Text="{Binding Check}" FontSize="11"
+                                           TextColor="{Binding CheckColor}"
+                                           HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ================= 接收页 ================= -->
+        <Grid Grid.Row="2" IsVisible="{Binding IsReceiveTab}" Padding="10,0,10,10"
+              RowDefinitions="Auto,Auto,*,Auto" RowSpacing="6">
+
+            <Label Grid.Row="0" Text="{Binding ReceiveDirLabel}" FontSize="10"
+                   TextColor="{StaticResource TextMuted}" LineBreakMode="WordWrap" />
+
+            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="6">
+                <Button Grid.Column="0" Text="复制路径" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding CopyReceivePathCommand}" />
+                <Button Grid.Column="1" Text="刷新" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding RefreshReceiveListCommand}" />
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource InputBox}" Padding="4">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,70,86" Padding="4,4" ColumnSpacing="4">
+                        <Label Grid.Column="0" Text="名称" Style="{StaticResource TableHeader}" />
+                        <Label Grid.Column="1" Text="大小" Style="{StaticResource TableHeader}"
+                               HorizontalTextAlignment="End" />
+                        <Label Grid.Column="2" Text="修改时间" Style="{StaticResource TableHeader}" />
+                    </Grid>
+                    <CollectionView Grid.Row="1" x:Name="ReceiveList"
+                                    ItemsSource="{Binding ReceivedFiles}"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnReceiveSelectionChanged">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:FileEntry">
+                                <Grid ColumnDefinitions="*,70,86" Padding="4,8" ColumnSpacing="4">
+                                    <Label Grid.Column="0" Text="{Binding Name}" FontSize="13"
+                                           LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding SizeText}" FontSize="12"
+                                           HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding MtimeText}" FontSize="11"
+                                           TextColor="{StaticResource TextMuted}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+
+            <Label Grid.Row="3" Text="收到文件后会自动出现在这里（每 3 秒自动刷新）。点一下记录可看完整名称与路径。"
+                   Style="{StaticResource MutedText}" />
+        </Grid>
+
+        <!-- ================= 聊天页 ================= -->
+        <Grid Grid.Row="2" IsVisible="{Binding IsChatTab}" Padding="10,0,10,10"
+              RowDefinitions="*,Auto,Auto" RowSpacing="6">
+
+            <Border Grid.Row="0" Style="{StaticResource InputBox}" Padding="6">
+                <CollectionView x:Name="ChatList" ItemsSource="{Binding Chat}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ChatEntry">
+                            <Label Text="{Binding Display}" TextColor="{Binding Color}"
+                                   FontSize="13" Padding="2,5" LineBreakMode="WordWrap" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
+
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <Border Grid.Column="0" Style="{StaticResource InputBox}" Padding="6,2">
+                    <Editor Text="{Binding ChatInput}" HeightRequest="66"
+                            Placeholder="输入消息…" AutoSize="Disabled" />
+                </Border>
+                <Button Grid.Column="1" Text="发送" Style="{StaticResource PrimaryButton}"
+                        Padding="14,10" Command="{Binding SendChatCommand}"
+                        IsEnabled="{Binding CanChat}" VerticalOptions="Fill" />
+            </Grid>
+
+            <Label Grid.Row="2" Text="{Binding HintText}" Style="{StaticResource MutedText}"
+                   LineBreakMode="WordWrap" />
+        </Grid>
+    </Grid>
+</ContentPage>

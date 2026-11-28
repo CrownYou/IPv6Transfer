@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:usesCleartextTraffic="true"></application>
+
+	<!-- 网络状态：用于判断 Wi-Fi 是否可用（裸 TCP 传输本身不需要 HTTP 明文开关，保留纯属防御性配置） -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+	<!-- Android 11 (API 30) 及以上：写公共 Download 目录需要「所有文件访问权限」，运行时需引导用户到系统设置页授权 -->
+	<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
+	<!-- Android 10 (API 29) 及以下的旧版存储权限；API 33 起系统已忽略该权限，因此限制 maxSdkVersion -->
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+</manifest>
